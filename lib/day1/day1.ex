@@ -1,6 +1,6 @@
 defmodule Day1 do
-  def solve_part1(filename) do
-    input = read_input(filename)
+  def solve_part1(is_example) do
+    input = ReadInput.read_lines(is_example, 1)
 
     pairs =
       input
@@ -15,8 +15,8 @@ defmodule Day1 do
     |> Enum.sum()
   end
 
-  def solve_part2(filename) do
-    input = read_input(filename)
+  def solve_part2(is_example) do
+    input = ReadInput.read_lines(is_example, 1)
 
     pairs =
       input
