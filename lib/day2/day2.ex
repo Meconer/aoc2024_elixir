@@ -26,4 +26,12 @@ defmodule Day2 do
 
     Enum.count(lines, fn line -> is_valid(line) end)
   end
+
+  def solve_part2(is_example) do
+    lines = ReadInput.read_lines(is_example, 2)
+
+    for line <- lines do
+      IO.puts(line)
+    end
+  end
 end
