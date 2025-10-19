@@ -7,6 +7,6 @@ defmodule Day2Test do
   end
 
   test "Test example part 2" do
-    assert Day1.solve_part2("example.txt") == 31
+    assert Day2.solve_part2(true) == 4
   end
 end
