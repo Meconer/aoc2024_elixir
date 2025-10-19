@@ -17,4 +17,16 @@ defmodule ReadInput do
         IO.puts("Error reading file: #{reason}")
     end
   end
+
+  def read_input(is_example, day_no) do
+    file_path = get_file_path(is_example, day_no)
+
+    case File.read(file_path) do
+      {:ok, content} ->
+        content
+
+      {:error, reason} ->
+        IO.puts("Error reading file: #{reason}")
+    end
+  end
 end
