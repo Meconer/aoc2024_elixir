@@ -16,9 +16,36 @@ defmodule Day4 do
   end
 
   def get_letter(r, c, grid) do
-    row = :erlang.element(r, grid)
-    c = :erlang.element(c, row)
-    <<c>>
+    height = tuple_size(grid)
+
+    first_row = :erlang.element(1, grid)
+    width = tuple_size(first_row)
+
+    case {r, c} do
+      {r, _c} when r < 1 ->
+        ""
+
+      {_r, c} when c < 1 ->
+        ""
+
+      {r, _c} when r > height ->
+        ""
+
+      {_r, c} when c > width ->
+        ""
+
+      {r, c} ->
+        row = :erlang.element(r, grid)
+        c = :erlang.element(c, row)
+        <<c>>
+    end
+  end
+
+  def get_cross_letters(r, c, grid) do
+    get_letter(r - 1, c - 1, grid) <>
+      get_letter(r - 1, c + 1, grid) <>
+      get_letter(r + 1, c - 1, grid) <>
+      get_letter(r + 1, c + 1, grid)
   end
 
   defmodule CrossCounter do
@@ -99,10 +126,38 @@ defmodule Day4 do
           end)
   end
 
+  defp correct_combos do
+    [""]
+  end
+
+  def count_xmas_p2(grid, width, height) do
+    for row <- 1..height,
+        do:
+          for(col <- 1..width, do: {row, col})
+          |> Enum.map(fn {r, c} ->
+            letter = get_letter(r, c, grid)
+
+            case letter do
+              "A" ->
+                cross_letters = get_cross_letters(r, c, grid)
+                Enum.any?()
+
+              _ ->
+                0
+            end
+          end)
+  end
+
   def solve_part1(is_example) do
     {grid, width, height} = get_input(is_example)
 
     xmases = count_xmas(grid, width, height)
+    xmases |> Enum.map(fn row -> Enum.sum(row) end) |> Enum.sum()
+  end
+
+  def solve_part2(is_example) do
+    {grid, width, height} = get_input(is_example)
+    xmases = count_xmas_p2(grid, width, height)
     xmases |> Enum.map(fn row -> Enum.sum(row) end) |> Enum.sum()
   end
 end
