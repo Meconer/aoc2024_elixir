@@ -127,7 +127,7 @@ defmodule Day4 do
   end
 
   defp correct_combos do
-    [""]
+    ["MMSS", "MSMS", "SMSM", "SSMM"]
   end
 
   def count_xmas_p2(grid, width, height) do
@@ -140,7 +140,10 @@ defmodule Day4 do
             case letter do
               "A" ->
                 cross_letters = get_cross_letters(r, c, grid)
-                Enum.any?()
+                Enum.any?(correct_combos(), fn combo -> combo == cross_letters end) |> case do
+                  true -> 1
+                  false -> 0
+                end
 
               _ ->
                 0
