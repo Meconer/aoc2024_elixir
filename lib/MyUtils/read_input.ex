@@ -1,5 +1,5 @@
 defmodule ReadInput do
-  def get_file_path(is_example, day_no) do
+  defp get_file_path(is_example, day_no) do
     fname = if is_example, do: "example.txt", else: "input.txt"
     dir_part = "lib/day" <> Integer.to_string(day_no) <> "/"
     dir_part <> fname
