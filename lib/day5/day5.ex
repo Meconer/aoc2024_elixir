@@ -23,12 +23,12 @@ end
 
 defmodule Day5 do
   def solve_part1(is_example) do
-    [a, b] =
+    [ordering, pages] =
       ReadInput.read_input(is_example, 5)
       |> String.split("\n\n", trim: true)
 
-    a =
-      String.split(a, "\n", trim: true)
+    ordering =
+      String.split(ordering, "\n", trim: true)
       |> Enum.map(&String.split(&1, "|", trim: true))
       |> Enum.map(fn [left, right] ->
         left_words = String.to_integer(left)
@@ -36,11 +36,22 @@ defmodule Day5 do
         {left_words, right_words}
       end)
 
-    b =
-      String.split(b, "\n", trim: true)
+    pages =
+      String.split(pages, "\n", trim: true)
       |> Enum.map(&String.split(&1, ",", trim: true))
       |> Enum.map(fn list -> Enum.map(list, &String.to_integer/1) end)
 
-    {a, b}
+    ord_pairs =
+      Enum.map(pages, fn page ->
+        ordered_pairs = Comparer.compare_all_unique_pairs(page)
+        ordered_pairs
+      end)
+
+    for pair <- ord_pairs do
+      for {first, second} <- pair do
+        IO.inspect(first)
+        IO.puts("--")
+      end
+    end
   end
 end
