@@ -40,7 +40,7 @@ defmodule Day5 do
     Enum.at(page, div(len, 2))
   end
 
-  def solve_part1(is_example) do
+  def get_rules_and_pages(is_example) do
     [rules, pages] =
       ReadInput.read_input(is_example, 5)
       |> String.split("\n\n", trim: true)
@@ -59,6 +59,13 @@ defmodule Day5 do
       |> Enum.map(&String.split(&1, ",", trim: true))
       |> Enum.map(fn list -> Enum.map(list, &String.to_integer/1) end)
 
+    [rules, pages]
+  end
+
+  def solve_part1(is_example) do
+    [rules, pages] =
+      get_rules_and_pages(is_example)
+
     result =
       Enum.map(pages, fn page ->
         cond do
@@ -69,5 +76,31 @@ defmodule Day5 do
       |> Enum.sum()
 
     result
+  end
+
+  def is_in_order(num1, num2, rules) do
+    cond do
+      Enum.any?(rules, fn {n1, n2} -> num1 == n1 and num2 == n2 end) -> true
+      true -> false
+    end
+  end
+
+  def solve_part2(is_example) do
+    [rules, pages] =
+      get_rules_and_pages(is_example)
+
+    result =
+      Enum.map(pages, fn page ->
+        cond do
+          not is_valid(page, rules) ->
+            Enum.sort(page, fn n1, n2 -> is_in_order(n1, n2, rules) end)
+            |> get_middle_number()
+
+          true ->
+            0
+        end
+      end)
+
+    Enum.sum(result)
   end
 end
