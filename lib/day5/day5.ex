@@ -22,13 +22,31 @@ defmodule Comparer do
 end
 
 defmodule Day5 do
+  def is_valid(page, rules) do
+    pairs = Comparer.compare_all_unique_pairs(page)
+
+    invalid =
+      Enum.any?(pairs, fn {el1, el2} ->
+        Enum.any?(rules, fn {r1, r2} ->
+          r1 == el2 and r2 == el1
+        end)
+      end)
+
+    not invalid
+  end
+
+  def get_middle_number(page) do
+    len = length(page)
+    Enum.at(page, div(len, 2))
+  end
+
   def solve_part1(is_example) do
-    [ordering, pages] =
+    [rules, pages] =
       ReadInput.read_input(is_example, 5)
       |> String.split("\n\n", trim: true)
 
-    ordering =
-      String.split(ordering, "\n", trim: true)
+    rules =
+      String.split(rules, "\n", trim: true)
       |> Enum.map(&String.split(&1, "|", trim: true))
       |> Enum.map(fn [left, right] ->
         left_words = String.to_integer(left)
@@ -41,17 +59,15 @@ defmodule Day5 do
       |> Enum.map(&String.split(&1, ",", trim: true))
       |> Enum.map(fn list -> Enum.map(list, &String.to_integer/1) end)
 
-    ord_pairs =
+    result =
       Enum.map(pages, fn page ->
-        ordered_pairs = Comparer.compare_all_unique_pairs(page)
-        ordered_pairs
+        cond do
+          is_valid(page, rules) -> get_middle_number(page)
+          true -> 0
+        end
       end)
+      |> Enum.sum()
 
-    for pair <- ord_pairs do
-      for {first, second} <- pair do
-        IO.inspect(first)
-        IO.puts("--")
-      end
-    end
+    result
   end
 end
