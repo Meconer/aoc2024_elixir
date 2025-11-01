@@ -24,4 +24,23 @@ defmodule GridFunc do
         <<c>>
     end
   end
+
+  def get_char({r, c}, grid) do
+    get_char(r, c, grid)
+  end
+
+  def print_grid(grid) do
+    grid_as_lists =
+      Tuple.to_list(grid)
+      |> Enum.map(&Tuple.to_list/1)
+
+    Enum.each(grid_as_lists, fn row ->
+      row_str =
+        row
+        |> Enum.map(fn ch -> <<ch>> end)
+        |> Enum.join("")
+
+      IO.puts(row_str)
+    end)
+  end
 end
