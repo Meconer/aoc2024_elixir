@@ -34,15 +34,17 @@ defmodule Day6 do
     end
   end
 
+  def p1_solver(grid, width, height, start_pos) do
+    traverse(grid, width, height, start_pos, :north, MapSet.new())
+  end
+
   def solve_part1(is_example) do
     {grid, width, height} = ReadInput.read_grid(is_example, 6)
 
     startpos = GridFunc.find_in_grid(grid, ?^)
     grid = GridFunc.set_char(grid, startpos, ?.)
-    startdir = :north
-    visited = MapSet.new()
-    visited = traverse(grid, width, height, startpos, startdir, visited)
-    visited
+    visited = p1_solver(grid, width, height, startpos)
+    MapSet.size(visited)
   end
 
   def traverse_p2(grid, width, height, pos, dir, visited) do
@@ -131,7 +133,9 @@ defmodule Day6 do
     grid = GridFunc.set_char(grid, startpos, ?.)
 
     obstacle_positions =
-      solve_part1(is_example) |> Enum.to_list() |> Enum.map(fn {{r, c}} -> {r, c} end)
+      p1_solver(grid, width, height, startpos)
+      |> MapSet.to_list()
+      |> Enum.map(fn {{r, c}} -> {r, c} end)
 
     loop_positions =
       p2_solver(grid, width, height, startpos, obstacle_positions, MapSet.new())
