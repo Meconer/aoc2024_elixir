@@ -1,82 +1,36 @@
 defmodule Day6 do
-  def turn_right(dir) do
-    case dir do
-      :north -> :east
-      :east -> :south
-      :south -> :west
-      :west -> :north
-    end
-  end
+  def turn_right(:north), do: :east
+  def turn_right(:east), do: :south
+  def turn_right(:south), do: :west
+  def turn_right(:west), do: :north
 
-  def move_forward({r, c}, dir) do
-    case dir do
-      :north -> {r - 1, c}
-      :east -> {r, c + 1}
-      :south -> {r + 1, c}
-      :west -> {r, c - 1}
-    end
+  def move_forward({r, c}, :north), do: {r - 1, c}
+  def move_forward({r, c}, :east), do: {r, c + 1}
+  def move_forward({r, c}, :south), do: {r + 1, c}
+  def move_forward({r, c}, :west), do: {r, c - 1}
+
+  def traverse(_grid, width, height, {r, c} = _pos, _dir, visited)
+      when r < 0 or c < 0 or r >= height or c >= width do
+    visited
   end
 
   def traverse(grid, width, height, pos, dir, visited) do
-    # GridFunc.print_tuple_grid(grid, pos, dir)
-    # IO.gets("Ent")
+    precheck = GridFunc.get_char(move_forward(pos, dir), grid)
 
-    case pos do
-      {r, c} when r < 0 or c < 0 or r >= height or c >= width ->
+    visited = MapSet.put(visited, {pos})
+
+    cond do
+      precheck == "#" or precheck == "O" ->
+        new_dir = turn_right(dir)
+        new_pos = move_forward(pos, new_dir)
+        traverse(grid, width, height, new_pos, new_dir, visited)
+
+      precheck == "" ->
         visited
 
-      pos ->
-        precheck = GridFunc.get_char(move_forward(pos, dir), grid)
-
-        visited = MapSet.put(visited, {pos})
-
-        cond do
-          precheck == "#" or precheck == "O" ->
-            new_dir = turn_right(dir)
-            new_pos = move_forward(pos, new_dir)
-            traverse(grid, width, height, new_pos, new_dir, visited)
-
-          precheck == "" ->
-            visited
-
-          true ->
-            new_pos = move_forward(pos, dir)
-            traverse(grid, width, height, new_pos, dir, visited)
-        end
-    end
-  end
-
-  def traverse_p2(grid, width, height, pos, dir, visited) do
-    # GridFunc.print_tuple_grid(grid, pos, dir)
-    # IO.gets("Ent")
-
-    case pos do
-      {r, c} when r < 0 or c < 0 or r >= height or c >= width ->
-        {visited, false}
-
-      pos ->
-        precheck = GridFunc.get_char(move_forward(pos, dir), grid)
-
-        if MapSet.member?(visited, {pos, dir}) do
-          # We have been here before in this direction - looping
-          {visited, true}
-        end
-
-        visited = MapSet.put(visited, {pos, dir})
-
-        cond do
-          precheck == "#" or precheck == "O" ->
-            new_dir = turn_right(dir)
-            new_pos = move_forward(pos, new_dir)
-            traverse_p2(grid, width, height, new_pos, new_dir, visited)
-
-          precheck == "" ->
-            {visited, false}
-
-          true ->
-            new_pos = move_forward(pos, dir)
-            traverse_p2(grid, width, height, new_pos, dir, visited)
-        end
+      true ->
+        new_pos = move_forward(pos, dir)
+        traverse(grid, width, height, new_pos, dir, visited)
     end
   end
 
@@ -91,40 +45,83 @@ defmodule Day6 do
     visited
   end
 
-  def p2_solver(grid, width, height, {s_r, s_c} = start_pos, obstacle_pos, looping_positions) do
-    {o_r, o_c} = obstacle_pos
+  def traverse_p2(grid, width, height, pos, dir, visited) do
+    case pos do
+      {r, c} when r < 0 or c < 0 or r >= height or c >= width ->
+        {visited, false}
 
-    IO.puts("Testing obstacle at #{inspect(obstacle_pos)}")
-    IO.puts("Looping positions so far: #{inspect(looping_positions)}")
-    IO.puts("Start pos: #{inspect(start_pos)}")
+      pos ->
+        {r, c} = pos
+        precheck = GridFunc.get_char(move_forward(pos, dir), grid)
 
-    if o_r == s_r and o_c == s_c do
-      IO.puts("Skipping start pos #{inspect(obstacle_pos)}")
-      p2_solver(grid, width, height, start_pos, {o_r, o_c + 1}, looping_positions)
+        case MapSet.member?(visited, {r, c, dir}) do
+          true ->
+            {visited, true}
+
+          false ->
+            visited = MapSet.put(visited, {r, c, dir})
+
+            cond do
+              precheck == "#" or precheck == "O" ->
+                new_dir = turn_right(dir)
+                # new_pos = move_forward(pos, new_dir)
+                traverse_p2(grid, width, height, pos, new_dir, visited)
+
+              precheck == "" ->
+                {visited, false}
+
+              true ->
+                new_pos = move_forward(pos, dir)
+                traverse_p2(grid, width, height, new_pos, dir, visited)
+            end
+        end
     end
+  end
 
-    if o_r >= height, do: looping_positions
+  def p2_solver(
+        _grid,
+        _width,
+        _height,
+        _start_pos,
+        [],
+        looping_positions
+      ) do
+    looping_positions
+  end
 
-    if o_c >= width do
-      p2_solver(grid, width, height, start_pos, {o_r + 1, 0}, looping_positions)
-    else
-      test_grid = GridFunc.set_char(grid, obstacle_pos, ?#)
-      GridFunc.print_tuple_grid(test_grid)
-      IO.gets("Next grid")
-      visited = MapSet.new()
+  def p2_solver(
+        grid,
+        width,
+        height,
+        {s_r, s_c} = start_pos,
+        [{o_r, o_c} | obstacle_positions],
+        looping_positions
+      )
+      when o_r == s_r and o_c == s_c do
+    p2_solver(grid, width, height, start_pos, obstacle_positions, looping_positions)
+  end
 
-      {_visited, loop} =
-        traverse_p2(test_grid, width, height, start_pos, :north, visited)
+  def p2_solver(
+        grid,
+        width,
+        height,
+        start_pos,
+        [{o_r, o_c} | obstacle_positions],
+        looping_positions
+      ) do
+    test_grid = GridFunc.set_char(grid, {o_r, o_c}, ?#)
 
+    {_, loop} =
+      traverse_p2(test_grid, width, height, start_pos, :north, MapSet.new())
+
+    looping_positions =
       if loop do
-        IO.puts("Loop detected at obstacle #{inspect(obstacle_pos)}")
-
-        ^looping_positions =
-          MapSet.put(looping_positions, obstacle_pos)
+        MapSet.put(looping_positions, {o_r, o_c})
+      else
+        looping_positions
       end
 
-      p2_solver(grid, width, height, start_pos, {o_r, o_c + 1}, looping_positions)
-    end
+    p2_solver(grid, width, height, start_pos, obstacle_positions, looping_positions)
   end
 
   def solve_part2(is_example) do
@@ -132,6 +129,13 @@ defmodule Day6 do
 
     startpos = GridFunc.find_in_grid(grid, ?^)
     grid = GridFunc.set_char(grid, startpos, ?.)
-    p2_solver(grid, width, height, startpos, {0, 0}, MapSet.new())
+
+    obstacle_positions =
+      solve_part1(is_example) |> Enum.to_list() |> Enum.map(fn {{r, c}} -> {r, c} end)
+
+    loop_positions =
+      p2_solver(grid, width, height, startpos, obstacle_positions, MapSet.new())
+
+    MapSet.size(loop_positions)
   end
 end
