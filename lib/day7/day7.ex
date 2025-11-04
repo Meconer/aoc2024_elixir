@@ -17,12 +17,31 @@ defmodule Day7 do
     input
   end
 
-  defp calc(t1, t2, :plus), do: t1 + t2
-  defp calc(t1, t2, :times), do: t1 * t2
+  defmodule Calculator do
+    defp possible_results([], results) do
+      results
+    end
+
+    defp possible_results([_], results) do
+      results
+    end
+
+    defp possible_results([a, b | rest], results) do
+      new_results =
+        [a + b, a * b | possible_results([b | rest], [])]
+
+      [new_results | results]
+    end
+
+    def calc_all(terms) do
+      rev_terms = Enum.reverse(terms)
+      possible_results(rev_terms, [])
+    end
+  end
 
   def calc_possible_results({wanted, terms}) do
     IO.puts("W: #{wanted}")
-    Enum.chunk_every(terms, 2, 1, :discard)
+    Calculator.calc_all(terms)
   end
 
   def solve_part1(is_example) do
