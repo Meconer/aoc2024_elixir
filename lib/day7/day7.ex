@@ -18,23 +18,28 @@ defmodule Day7 do
   end
 
   defmodule Calculator do
-    defp possible_results([], results) do
-      results
+    defp possible_results([]) do
+      raise("Need at least one element")
     end
 
-    defp possible_results([_], results) do
-      results
+    defp possible_results([el]) do
+      [el]
     end
 
-    defp possible_results([a, b | rest], results) do
-      new_results =
-        [a + b, a * b | possible_results([b | rest], [])]
+    defp possible_results([a, b], _acc) do
+      [a + b, a * b]
+    end
 
-      [new_results | results]
+    defp possible_results([a | rest], acc) do
+      results =
+        Enum.flat_map(acc, fn el -> [el * a, el + a] end)
+
+      results ++ acc
     end
 
     def calc_all(terms) do
       rev_terms = Enum.reverse(terms)
+      IO.inspect(rev_terms)
       possible_results(rev_terms, [])
     end
   end
