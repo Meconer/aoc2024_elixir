@@ -18,24 +18,19 @@ defmodule Day7 do
   end
 
   defmodule Calculator do
-    defp possible_results([], results) do
-      results
+    defp possible_results([a, b]) do
+      [a + b, a * b]
     end
 
-    defp possible_results([_], results) do
-      results
-    end
+    defp possible_results([a | rest]) do
+      prev_results = possible_results(rest)
 
-    defp possible_results([a, b | rest], results) do
-      new_results =
-        [a + b, a * b | possible_results([b | rest], [])]
-
-      [new_results | results]
+      Enum.flat_map(prev_results, fn el -> [a + el, a * el] end)
     end
 
     def calc_all(terms) do
       rev_terms = Enum.reverse(terms)
-      possible_results(rev_terms, [])
+      possible_results(rev_terms)
     end
   end
 
