@@ -34,7 +34,36 @@ defmodule Day8 do
     [{ar1, ac1}, {ar2, ac2}]
   end
 
-  def calc_all_anti_nodes(input) do
+  def calc_anti_nodes_p2({r1, c1}, {r2, c2}, {width, height}) do
+    dx = c2 - c1
+    dy = r2 - r1
+
+    ar1 = r1 + 2 * dy
+    ac1 = c1 + 2 * dx
+    ar2 = r2 - 2 * dy
+    ac2 = c2 - 2 * dx
+    [{ar1, ac1}, {ar2, ac2}]
+  end
+
+  def calc_all_anti_nodes_p1(input) do
+    all_anti_nodes =
+      Enum.reduce(input, [], fn {_ch, pos_list}, all_an_acc ->
+        pairs = Comparer.compare_all_unique_pairs(pos_list)
+
+        anti_nodes_for_name =
+          Enum.reduce(pairs, [], fn {{r1, c1}, {r2, c2}}, an_acc ->
+            antinodes = calc_anti_nodes({r1, c1}, {r2, c2})
+
+            an_acc ++ antinodes
+          end)
+
+        all_an_acc ++ anti_nodes_for_name
+      end)
+
+    all_anti_nodes
+  end
+
+  def calc_all_anti_nodes_p2(input, width, height) do
     all_anti_nodes =
       Enum.reduce(input, [], fn {_ch, pos_list}, all_an_acc ->
         pairs = Comparer.compare_all_unique_pairs(pos_list)
@@ -59,9 +88,14 @@ defmodule Day8 do
   def solve_part1(is_example) do
     {input, width, height} = parse_input(is_example)
 
-    calc_all_anti_nodes(input)
+    calc_all_anti_nodes_p1(input)
     |> Enum.filter(fn {r, c} -> is_on_grid({r, c}, {width, height}) end)
     |> MapSet.new()
     |> MapSet.size()
+  end
+
+  def solve_part2(is_example) do
+    {input, width, height} = parse_input(is_example)
+    calc_all_anti_nodes_p2(input, width, height)
   end
 end
