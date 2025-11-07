@@ -1,20 +1,27 @@
 defmodule Day8 do
-  def get_input(is_example) do
-    ReadInput.read_lines(is_example, 8)
-    |> Enum.with_index()
-    |> Enum.map(fn {line, row_idx} ->
-      {Enum.with_index(String.to_charlist(line)), row_idx}
-    end)
-    |> Enum.reduce(Map.new(), fn {day_list, row_idx}, acc ->
-      Enum.reduce(day_list, acc, fn {ch, col_idx}, acc ->
-        if ch != 46 do
-          pos_list = Map.get(acc, ch, [])
-          Map.put(acc, ch, [{row_idx, col_idx} | pos_list])
-        else
-          acc
-        end
+  def parse_input(is_example) do
+    lines = ReadInput.read_lines(is_example, 8)
+    width = String.length(List.first(lines))
+    heigth = length(lines)
+
+    parsed =
+      lines
+      |> Enum.with_index()
+      |> Enum.map(fn {line, row_idx} ->
+        {Enum.with_index(String.to_charlist(line)), row_idx}
       end)
-    end)
+      |> Enum.reduce(Map.new(), fn {day_list, row_idx}, acc ->
+        Enum.reduce(day_list, acc, fn {ch, col_idx}, acc ->
+          if ch != 46 do
+            pos_list = Map.get(acc, ch, [])
+            Map.put(acc, ch, [{row_idx, col_idx} | pos_list])
+          else
+            acc
+          end
+        end)
+      end)
+
+    {parsed, width, heigth}
   end
 
   def calc_anti_nodes({r1, c1}, {r2, c2}) do
@@ -27,13 +34,10 @@ defmodule Day8 do
     [{ar1, ac1}, {ar2, ac2}]
   end
 
-  def solve_part1(is_example) do
-    input = get_input(is_example)
-
+  def calc_all_anti_nodes(input) do
     all_anti_nodes =
-      Enum.reduce(input, [], fn {ch, pos_list}, all_an_acc ->
+      Enum.reduce(input, [], fn {_ch, pos_list}, all_an_acc ->
         pairs = Comparer.compare_all_unique_pairs(pos_list)
-        IO.puts("#{ch} - ")
 
         anti_nodes_for_name =
           Enum.reduce(pairs, [], fn {{r1, c1}, {r2, c2}}, an_acc ->
@@ -42,10 +46,22 @@ defmodule Day8 do
             an_acc ++ antinodes
           end)
 
-        IO.inspect(anti_nodes_for_name, label: "antinodes for #{ch}")
         all_an_acc ++ anti_nodes_for_name
       end)
 
     all_anti_nodes
+  end
+
+  def is_on_grid({r, c}, {width, height}) do
+    r >= 0 and r < height and c >= 0 and c < width
+  end
+
+  def solve_part1(is_example) do
+    {input, width, height} = parse_input(is_example)
+
+    calc_all_anti_nodes(input)
+    |> Enum.filter(fn {r, c} -> is_on_grid({r, c}, {width, height}) end)
+    |> MapSet.new()
+    |> MapSet.size()
   end
 end
