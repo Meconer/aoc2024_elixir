@@ -34,15 +34,40 @@ defmodule Day8 do
     [{ar1, ac1}, {ar2, ac2}]
   end
 
+  def get_antinodes_in_range({r1, c1}, {r2, c2}, {dx, dy}, factor, {width, height}, accum) do
+    pr1 = r1 + factor * dy
+    pc1 = c1 + factor * dx
+    nr2 = r2 - factor * dy
+    nc2 = c2 - factor * dx
+
+    positions =
+      [{pr1, pc1}, {nr2, nc2}]
+      |> Enum.filter(fn {r, c} -> is_on_grid({r, c}, {width, height}) end)
+
+    if length(positions) == 0 do
+      accum
+    else
+      get_antinodes_in_range(
+        {r1, c1},
+        {r2, c2},
+        {dx, dy},
+        factor + 1,
+        {width, height},
+        accum ++ positions
+      )
+    end
+  end
+
   def calc_anti_nodes_p2({r1, c1}, {r2, c2}, {width, height}) do
     dx = c2 - c1
     dy = r2 - r1
 
-    ar1 = r1 + 2 * dy
-    ac1 = c1 + 2 * dx
-    ar2 = r2 - 2 * dy
-    ac2 = c2 - 2 * dx
-    [{ar1, ac1}, {ar2, ac2}]
+    factor = 1
+
+    antinodes_in_range =
+      get_antinodes_in_range({r1, c1}, {r2, c2}, {dx, dy}, factor, {width, height}, [])
+
+    antinodes_in_range
   end
 
   def calc_all_anti_nodes_p1(input) do
@@ -70,7 +95,7 @@ defmodule Day8 do
 
         anti_nodes_for_name =
           Enum.reduce(pairs, [], fn {{r1, c1}, {r2, c2}}, an_acc ->
-            antinodes = calc_anti_nodes({r1, c1}, {r2, c2})
+            antinodes = calc_anti_nodes_p2({r1, c1}, {r2, c2}, {width, height})
 
             an_acc ++ antinodes
           end)
@@ -96,6 +121,9 @@ defmodule Day8 do
 
   def solve_part2(is_example) do
     {input, width, height} = parse_input(is_example)
+
     calc_all_anti_nodes_p2(input, width, height)
+    |> MapSet.new()
+    |> MapSet.size()
   end
 end
