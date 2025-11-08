@@ -26,6 +26,6 @@ defmodule Day9 do
   def parse_input(is_example) do
     input = ReadInput.read_input(is_example, 9)
     ch_list = String.to_charlist(input)
-    ch_list |> length()
+    ch_list |> RecParser.parse_list()
   end
 end
