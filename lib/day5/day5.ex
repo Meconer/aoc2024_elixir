@@ -19,6 +19,21 @@ defmodule Comparer do
       {element_A, element_B}
     end
   end
+
+  def compare_all_pairs(list) do
+    # 1. Use Enum.with_index/1 to get both the element and its position
+    indexed_list = Enum.with_index(list)
+
+    # 2. Use a 'for' comprehension with two generators
+    for {element_A, index_A} <- indexed_list,
+        {element_B, index_B} <- indexed_list,
+        # 3. Filter the pairs: only keep pairs where index_A is not equL to index_B.
+        # This ensures that we exclude comparing an element to itself (index_A != index_B).
+        index_A != index_B do
+      # 4. Return the pair
+      {element_A, element_B}
+    end
+  end
 end
 
 defmodule Day5 do

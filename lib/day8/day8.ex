@@ -4,6 +4,9 @@ defmodule Day8 do
     width = String.length(List.first(lines))
     heigth = length(lines)
 
+    # Find every position that has an antenna
+    # and return a map with antenna name as key
+    # and a list of positions {r,c} as value
     parsed =
       lines
       |> Enum.with_index()
@@ -24,6 +27,9 @@ defmodule Day8 do
     {parsed, width, heigth}
   end
 
+  @doc """
+  Finds the antinodes for part 1.
+  """
   def calc_anti_nodes({r1, c1}, {r2, c2}) do
     dx = c2 - c1
     dy = r2 - r1
@@ -34,6 +40,12 @@ defmodule Day8 do
     [{ar1, ac1}, {ar2, ac2}]
   end
 
+  @doc """
+  For part 2, get the antinodes that is on equal distance from a pair of antennas.
+  Call this with two antenna positions, the distance between them, a factor of 1
+  and the size of the grid. This function will call itself with the factor increasing
+  by 1 until the antinode positions are all outside the grid range.
+  """
   def get_antinodes_in_range({r1, c1}, {r2, c2}, {dx, dy}, factor, {width, height}, accum) do
     pr1 = r1 + factor * dy
     pc1 = c1 + factor * dx
@@ -58,6 +70,10 @@ defmodule Day8 do
     end
   end
 
+  @doc """
+  Part 2 only
+  Calculates all antinodes by calling the recursive function above
+  """
   def calc_anti_nodes_p2({r1, c1}, {r2, c2}, {width, height}) do
     dx = c2 - c1
     dy = r2 - r1
@@ -70,11 +86,17 @@ defmodule Day8 do
     antinodes_in_range
   end
 
+  @doc """
+  Calculates antinodes for p1
+  """
   def calc_all_anti_nodes_p1(input) do
+    # Find the antinodes for each antenna name
     all_anti_nodes =
       Enum.reduce(input, [], fn {_ch, pos_list}, all_an_acc ->
+        # Get all combos of two antennas (with same name)
         pairs = Comparer.compare_all_unique_pairs(pos_list)
 
+        # Get the antinodes for each pair
         anti_nodes_for_name =
           Enum.reduce(pairs, [], fn {{r1, c1}, {r2, c2}}, an_acc ->
             antinodes = calc_anti_nodes({r1, c1}, {r2, c2})
@@ -88,6 +110,9 @@ defmodule Day8 do
     all_anti_nodes
   end
 
+  @doc """
+  Calculates antinodes for p1
+  """
   def calc_all_anti_nodes_p2(input, width, height) do
     all_anti_nodes =
       Enum.reduce(input, [], fn {_ch, pos_list}, all_an_acc ->
@@ -106,6 +131,9 @@ defmodule Day8 do
     all_anti_nodes
   end
 
+  @doc """
+  Checks if a position is on the grid
+  """
   def is_on_grid({r, c}, {width, height}) do
     r >= 0 and r < height and c >= 0 and c < width
   end
@@ -115,6 +143,7 @@ defmodule Day8 do
 
     calc_all_anti_nodes_p1(input)
     |> Enum.filter(fn {r, c} -> is_on_grid({r, c}, {width, height}) end)
+    # Put the positions in  a map to filter out duplicates
     |> MapSet.new()
     |> MapSet.size()
   end
@@ -123,6 +152,7 @@ defmodule Day8 do
     {input, width, height} = parse_input(is_example)
 
     calc_all_anti_nodes_p2(input, width, height)
+    # Put the positions in  a map to filter out duplicates
     |> MapSet.new()
     |> MapSet.size()
   end
