@@ -35,25 +35,25 @@ defmodule Day9 do
     end
 
     defp rec_compact(files_rev, empties, acc_fs) do
-      [{id, f_start, f_len} | fs_rest] = List.first(files_rev)
-      [{e_start, e_len} | e_rest] = empties
+      [%{id: id, start: f_start, len: f_len} | fs_rest] = files_rev
+      [%{start: e_start, len: e_len} | e_rest] = empties
 
       cond do
         # Entire file fits in this empty space with room left
         f_len < e_len ->
-          new_empties = [{e_start + f_len, e_len - f_len} | e_rest]
-          new_acc_fs = [{id, e_start, f_len} | acc_fs]
+          new_empties = [%{start: e_start + f_len, len: e_len - f_len} | e_rest]
+          new_acc_fs = [%{id: id, start: e_start, len: f_len} | fs_rest]
           rec_compact(fs_rest, new_empties, new_acc_fs)
 
         # Entire file fits perfectly
         f_len == e_len ->
-          new_acc_fs = [{id, e_start, f_len} | acc_fs]
+          new_acc_fs = [%{id: id, start: e_start, len: f_len} | fs_rest]
           rec_compact(fs_rest, e_rest, new_acc_fs)
 
         # We have to split the file
         f_len > e_len ->
-          new_fs = [{id, f_start, f_len - e_len} | fs_rest]
-          new_acc_fs = [{id, e_start, e_len} | acc_fs]
+          new_fs = [%{id: id, start: f_start, len: f_len - e_len} | fs_rest]
+          new_acc_fs = [%{id: id, start: e_start, len: e_len} | fs_rest]
           rec_compact(new_fs, e_rest, new_acc_fs)
       end
     end
