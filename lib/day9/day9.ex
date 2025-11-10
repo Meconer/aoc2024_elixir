@@ -30,43 +30,59 @@ defmodule Day9 do
   end
 
   defmodule FsCompacter do
-    defp rec_compact(_files_rev, [], acc_fs) do
+    defp rec_compact(_files, [], acc_fs) do
       acc_fs
     end
 
-    defp rec_compact(files_rev, empties, acc_fs) do
-      [%{id: id, start: f_start, len: f_len} | fs_rest] = files_rev
+    defp rec_compact(files, empties, acc_fs) do
+      # Get the first file
+      [%{id: id, start: f_start, len: f_len} = first_file | fs_rest] = files
+      # Get the first empty space
       [%{start: e_start, len: e_len} | e_rest] = empties
 
+      IO.puts("f_s, e_s : #{f_start}, #{e_start}")
+
       cond do
-        # Entire file fits in this empty space with room left
-        f_len < e_len ->
-          new_empties = [%{start: e_start + f_len, len: e_len - f_len} | e_rest]
-          new_acc_fs = [%{id: id, start: e_start, len: f_len} | fs_rest]
-          rec_compact(fs_rest, new_empties, new_acc_fs)
+        f_start < e_start ->
+          # Next entity is a file. Copy it to the acc
+          new_acc_fs = acc_fs ++ [first_file]
+          rec_compact(fs_rest, empties, new_acc_fs)
 
-        # Entire file fits perfectly
-        f_len == e_len ->
-          new_acc_fs = [%{id: id, start: e_start, len: f_len} | fs_rest]
-          rec_compact(fs_rest, e_rest, new_acc_fs)
+        f_start > e_start ->
+          # Next entity is empty space
+          cond do
+            # Entire file fits in this empty space with room left
+            f_len < e_len ->
+              new_empties = [%{start: e_start + f_len, len: e_len - f_len} | e_rest]
+              new_acc_fs = acc_fs ++ [%{id: id, start: e_start, len: f_len}]
+              rec_compact(fs_rest, new_empties, new_acc_fs)
 
-        # We have to split the file
-        f_len > e_len ->
-          new_fs = [%{id: id, start: f_start, len: f_len - e_len} | fs_rest]
-          new_acc_fs = [%{id: id, start: e_start, len: e_len} | fs_rest]
-          rec_compact(new_fs, e_rest, new_acc_fs)
+            # Entire file fits perfectly
+            f_len == e_len ->
+              new_acc_fs = [%{id: id, start: e_start, len: f_len} | fs_rest]
+              rec_compact(fs_rest, e_rest, new_acc_fs)
+
+            # We have to split the file
+            f_len > e_len ->
+              new_fs = [%{id: id, start: f_start, len: f_len - e_len} | fs_rest]
+              new_acc_fs = [%{id: id, start: e_start, len: e_len} | fs_rest]
+              rec_compact(new_fs, e_rest, new_acc_fs)
+          end
       end
     end
 
     def compact_fs({files, empties}) do
       # Compact the filesystem by moving files into empty spaces
-      new_fs = rec_compact(Enum.reverse(files), empties, [])
-      Enum.reverse(new_fs)
+      # Get the first file and put in the new resulting file sys
+      new_fs = rec_compact(files, empties, [])
+      new_fs
     end
   end
 
   def solve_part1(is_example) do
     {files, empties} = parse_input(is_example)
+    IO.inspect(files)
+    IO.inspect(empties)
     new_fs = FsCompacter.compact_fs({files, empties})
     new_fs
   end
