@@ -14,7 +14,14 @@ defmodule Day9 do
       len = fs - ?0
       file_acc = [%{:id => id, :start => pos, :len => len} | file_acc]
       empty_len = es - ?0
-      empty_acc = [%{:start => pos + len, :len => empty_len} | empty_acc]
+
+      empty_acc =
+        if empty_len == 0 do
+          empty_acc
+        else
+          [%{:start => pos + len, :len => empty_len} | empty_acc]
+        end
+
       parse(rest, pos + len + empty_len, id + 1, file_acc, empty_acc)
     end
 
@@ -36,7 +43,7 @@ defmodule Day9 do
 
     defp rec_compact(files, empties, acc_fs) do
       # Get the first file
-      [%{id: id, start: f_start, len: f_len} = first_file | fs_rest] = files
+      [%{id: _f_id, start: f_start, len: f_len} = first_file | fs_rest] = files
       # Get the first empty space
       [%{start: e_start, len: e_len} | e_rest] = empties
 
@@ -50,22 +57,32 @@ defmodule Day9 do
 
         f_start > e_start ->
           # Next entity is empty space
+          # Get the last file. We will use it to fill the empty space
+          %{id: l_id, start: l_start, len: l_len} = List.last(files)
+
           cond do
             # Entire file fits in this empty space with room left
-            f_len < e_len ->
-              new_empties = [%{start: e_start + f_len, len: e_len - f_len} | e_rest]
-              new_acc_fs = acc_fs ++ [%{id: id, start: e_start, len: f_len}]
-              rec_compact(fs_rest, new_empties, new_acc_fs)
+            l_len < l_len ->
+              new_empties = [%{start: e_start + l_len, len: e_len - l_len} | e_rest]
+              new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
+              [_ | files_with_last_removed] = Enum.reverse(files)
+              rec_compact(Enum.reverse(files_with_last_removed), new_empties, new_acc_fs)
 
             # Entire file fits perfectly
-            f_len == e_len ->
-              new_acc_fs = [%{id: id, start: e_start, len: f_len} | fs_rest]
-              rec_compact(fs_rest, e_rest, new_acc_fs)
+            f_len == l_len ->
+              new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
+              [_ | files_with_last_removed] = Enum.reverse(files)
+              rec_compact(Enum.reverse(files_with_last_removed), e_rest, new_acc_fs)
 
             # We have to split the file
-            f_len > e_len ->
-              new_fs = [%{id: id, start: f_start, len: f_len - e_len} | fs_rest]
-              new_acc_fs = [%{id: id, start: e_start, len: e_len} | fs_rest]
+            f_len > l_len ->
+              new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: e_len}]
+              [_ | files_with_last_removed] = Enum.reverse(files)
+
+              new_fs =
+                [%{id: l_id, start: l_start, len: l_len - e_len} | files_with_last_removed]
+                |> Enum.reverse()
+
               rec_compact(new_fs, e_rest, new_acc_fs)
           end
       end
