@@ -37,17 +37,21 @@ defmodule Day9 do
   end
 
   defmodule FsCompacter do
-    defp rec_compact(_files, [], acc_fs) do
+    defp rec_compact(files, [], acc_fs) do
+      # No more empty space
+      acc_fs ++ files
+    end
+
+    defp rec_compact([], _empties, acc_fs) do
+      # No more files
       acc_fs
     end
 
     defp rec_compact(files, empties, acc_fs) do
       # Get the first file
-      [%{id: _f_id, start: f_start, len: f_len} = first_file | fs_rest] = files
+      [%{id: _f_id, start: f_start, len: _f_len} = first_file | fs_rest] = files
       # Get the first empty space
       [%{start: e_start, len: e_len} | e_rest] = empties
-
-      IO.puts("f_s, e_s : #{f_start}, #{e_start}")
 
       cond do
         f_start < e_start ->
@@ -62,44 +66,49 @@ defmodule Day9 do
 
           cond do
             # Entire file fits in this empty space with room left
-            l_len < l_len ->
+            l_len < e_len ->
               new_empties = [%{start: e_start + l_len, len: e_len - l_len} | e_rest]
               new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
               [_ | files_with_last_removed] = Enum.reverse(files)
               rec_compact(Enum.reverse(files_with_last_removed), new_empties, new_acc_fs)
 
             # Entire file fits perfectly
-            f_len == l_len ->
+            l_len == e_len ->
               new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
               [_ | files_with_last_removed] = Enum.reverse(files)
               rec_compact(Enum.reverse(files_with_last_removed), e_rest, new_acc_fs)
 
             # We have to split the file
-            f_len > l_len ->
+            l_len > e_len ->
               new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: e_len}]
               [_ | files_with_last_removed] = Enum.reverse(files)
 
-              new_fs =
-                [%{id: l_id, start: l_start, len: l_len - e_len} | files_with_last_removed]
+              new_files =
+                [
+                  %{id: l_id, start: l_start, len: l_len - e_len}
+                  | files_with_last_removed
+                ]
                 |> Enum.reverse()
 
-              rec_compact(new_fs, e_rest, new_acc_fs)
+              rec_compact(new_files, e_rest, new_acc_fs)
           end
       end
+    end
+
+    def calc_checksum(fs) do
     end
 
     def compact_fs({files, empties}) do
       # Compact the filesystem by moving files into empty spaces
       # Get the first file and put in the new resulting file sys
       new_fs = rec_compact(files, empties, [])
-      new_fs
+      calc_checksum(new_fs)
     end
   end
 
   def solve_part1(is_example) do
     {files, empties} = parse_input(is_example)
-    IO.inspect(files)
-    IO.inspect(empties)
+
     new_fs = FsCompacter.compact_fs({files, empties})
     new_fs
   end
