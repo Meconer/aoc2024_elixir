@@ -95,14 +95,32 @@ defmodule Day9 do
       end
     end
 
-    def calc_checksum(fs) do
-    end
-
     def compact_fs({files, empties}) do
       # Compact the filesystem by moving files into empty spaces
       # Get the first file and put in the new resulting file sys
-      new_fs = rec_compact(files, empties, [])
-      calc_checksum(new_fs)
+      rec_compact(files, empties, [])
+    end
+  end
+
+  defmodule ChecksumCalculator do
+    defp f_cs(%{id: id, start: start, len: len}) do
+      if len == 0 do
+        0
+      else
+        id * start + f_cs(%{id: id, start: start + 1, len: len - 1})
+      end
+    end
+
+    defp rec_calc([]) do
+      0
+    end
+
+    defp rec_calc([file | rest]) do
+      f_cs(file) + rec_calc(rest)
+    end
+
+    def calc_checksum(fs) do
+      rec_calc(fs)
     end
   end
 
@@ -110,6 +128,6 @@ defmodule Day9 do
     {files, empties} = parse_input(is_example)
 
     new_fs = FsCompacter.compact_fs({files, empties})
-    new_fs
+    ChecksumCalculator.calc_checksum(new_fs)
   end
 end
