@@ -102,6 +102,64 @@ defmodule Day9 do
     end
   end
 
+  defmodule FsCompacterP2 do
+    defp rec_compact(files, [], acc_fs) do
+      # No more empty space
+      acc_fs ++ files
+    end
+
+    defp rec_compact([], _empties, acc_fs) do
+      # No more files
+      acc_fs
+    end
+
+    defp rec_compact(files, empties, acc_fs) do
+      # Get the first file
+      [%{id: _f_id, start: f_start, len: _f_len} = first_file | fs_rest] = files
+      # Get the first empty space
+      [%{start: e_start, len: e_len} | e_rest] = empties
+
+      cond do
+        f_start < e_start ->
+          # Next entity is a file. Copy it to the acc
+          new_acc_fs = acc_fs ++ [first_file]
+          rec_compact(fs_rest, empties, new_acc_fs)
+
+        f_start > e_start ->
+          # Next entity is empty space
+          # Find the last file that fits in this empty space
+          %{id: l_id, start: l_start, len: l_len} =
+            last_fitting_file =
+            files
+            |> Enum.reverse()
+            |> Enum.find(fn el -> el.len <= e_len end)
+
+          IO.inspect(last_fitting_file)
+
+          cond do
+            # Entire file fits in this empty space with room left
+            l_len < e_len ->
+              new_empties = [%{start: e_start + l_len, len: e_len - l_len} | e_rest]
+              new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
+              [_ | files_with_last_removed] = Enum.reverse(files)
+              rec_compact(Enum.reverse(files_with_last_removed), new_empties, new_acc_fs)
+
+            # Entire file fits perfectly
+            l_len == e_len ->
+              new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
+              [_ | files_with_last_removed] = Enum.reverse(files)
+              rec_compact(Enum.reverse(files_with_last_removed), e_rest, new_acc_fs)
+          end
+      end
+    end
+
+    def compact_fs({files, empties}) do
+      # Compact the filesystem by moving files into empty spaces
+      # Get the first file and put in the new resulting file sys
+      rec_compact(files, empties, [])
+    end
+  end
+
   defmodule ChecksumCalculator do
     defp f_cs(%{id: id, start: start, len: len}) do
       if len == 0 do
@@ -129,5 +187,10 @@ defmodule Day9 do
 
     new_fs = FsCompacter.compact_fs({files, empties})
     ChecksumCalculator.calc_checksum(new_fs)
+  end
+
+  def solve_part2(is_example) do
+    {files, empties} = parse_input(is_example)
+    FsCompacterP2.compact_fs({files, empties})
   end
 end
