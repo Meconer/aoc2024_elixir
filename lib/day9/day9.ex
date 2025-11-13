@@ -117,7 +117,7 @@ defmodule Day9 do
       # Get the first file
       [%{id: _f_id, start: f_start, len: _f_len} = first_file | fs_rest] = files
       # Get the first empty space
-      [%{start: e_start, len: e_len} = empty_space | e_rest] = empties
+      [%{start: e_start, len: e_len} | e_rest] = empties
 
       cond do
         f_start < e_start ->
@@ -136,13 +136,10 @@ defmodule Day9 do
 
           case last_fitting_file do
             nil ->
-              # No file fitting in the empty space exists. Add this empty space to the acc
-              IO.puts("No space at #{e_start}")
-              new_acc_fs = acc_fs ++ [empty_space]
-              rec_compact(files, e_rest, new_acc_fs)
+              # No file fitting in the empty space exists. Throw it away
+              rec_compact(files, e_rest, acc_fs)
 
             %{id: l_id, start: _l_start, len: l_len} ->
-              IO.inspect(last_fitting_file)
               # Remove file from its place in the fs
               new_files =
                 Enum.filter(files, fn %{id: id, start: _start, len: _len} -> id != l_id end)
@@ -201,6 +198,7 @@ defmodule Day9 do
 
   def solve_part2(is_example) do
     {files, empties} = parse_input(is_example)
-    FsCompacterP2.compact_fs({files, empties})
+    new_fs = FsCompacterP2.compact_fs({files, empties})
+    ChecksumCalculator.calc_checksum(new_fs)
   end
 end
