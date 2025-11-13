@@ -117,7 +117,7 @@ defmodule Day9 do
       # Get the first file
       [%{id: _f_id, start: f_start, len: _f_len} = first_file | fs_rest] = files
       # Get the first empty space
-      [%{start: e_start, len: e_len} | e_rest] = empties
+      [%{start: e_start, len: e_len} = empty_space | e_rest] = empties
 
       cond do
         f_start < e_start ->
@@ -128,27 +128,37 @@ defmodule Day9 do
         f_start > e_start ->
           # Next entity is empty space
           # Find the last file that fits in this empty space
-          %{id: l_id, start: l_start, len: l_len} =
-            last_fitting_file =
+
+          last_fitting_file =
             files
             |> Enum.reverse()
             |> Enum.find(fn el -> el.len <= e_len end)
 
-          IO.inspect(last_fitting_file)
+          case last_fitting_file do
+            nil ->
+              # No file fitting in the empty space exists. Add this empty space to the acc
+              IO.puts("No space at #{e_start}")
+              new_acc_fs = acc_fs ++ [empty_space]
+              rec_compact(files, e_rest, new_acc_fs)
 
-          cond do
-            # Entire file fits in this empty space with room left
-            l_len < e_len ->
-              new_empties = [%{start: e_start + l_len, len: e_len - l_len} | e_rest]
-              new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
-              [_ | files_with_last_removed] = Enum.reverse(files)
-              rec_compact(Enum.reverse(files_with_last_removed), new_empties, new_acc_fs)
+            %{id: l_id, start: _l_start, len: l_len} ->
+              IO.inspect(last_fitting_file)
+              # Remove file from its place in the fs
+              new_files =
+                Enum.filter(files, fn %{id: id, start: _start, len: _len} -> id != l_id end)
 
-            # Entire file fits perfectly
-            l_len == e_len ->
-              new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
-              [_ | files_with_last_removed] = Enum.reverse(files)
-              rec_compact(Enum.reverse(files_with_last_removed), e_rest, new_acc_fs)
+              cond do
+                # Entire file fits in this empty space with room left
+                l_len < e_len ->
+                  new_empties = [%{start: e_start + l_len, len: e_len - l_len} | e_rest]
+                  new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
+                  rec_compact(new_files, new_empties, new_acc_fs)
+
+                # Entire file fits perfectly
+                l_len == e_len ->
+                  new_acc_fs = acc_fs ++ [%{id: l_id, start: e_start, len: l_len}]
+                  rec_compact(new_files, e_rest, new_acc_fs)
+              end
           end
       end
     end
